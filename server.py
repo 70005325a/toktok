@@ -181,9 +181,12 @@ def room_member_online_count(room):
 
 
 def unread_for_message(room, msg):
+    # 카카오톡처럼: 상대가 '읽기 전'이면 오프라인이어도 1 유지.
+    # 대상 = DM은 두 참여자, 그룹은 한 번이라도 들어온 멤버.
+    targets = room.get("participants") if room["type"] == "dm" else room["members"]
     n = 0
-    for mid in room["members"]:
-        if mid == msg["senderId"] or not is_online(mid):
+    for mid in (targets or []):
+        if mid == msg["senderId"]:
             continue
         last = CLIENTS.get(mid, {}).get("lastRead", {}).get(room["id"], 0)
         if last < msg["ts"]:
