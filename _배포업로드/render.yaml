@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: toktok-messenger
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    autoDeploy: true
+    envVars:
+      - key: ACCESS_CODE
+        sync: false

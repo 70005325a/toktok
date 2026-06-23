@@ -27,8 +27,6 @@ let onlineList = [];
 const roomCache = {};
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "u" + Math.random().toString(36).slice(2) + Date.now());
-// 친구에게 공유할 짧은 코드 (혼동되는 글자 제외)
-function shortCode() { const a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s = ""; for (let i = 0; i < 6; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
 
 const BG_PRESETS = { default: "", blue: "#9fb8cf", green: "#a7c4a0", pink: "#e7b6c2", cream: "#ece3cf", lavender: "#c3b6d9", mint: "#bfe3da", dark: "#2b3340" };
 const lsGet = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
@@ -38,9 +36,6 @@ let blockedNames = lsGet("tt_blocked_names", {});
 let muted = new Set(lsGet("tt_muted", []));
 let seenMap = lsGet("tt_seen", {});
 let bgMap = lsGet("tt_bg", {});
-let contacts = lsGet("tt_contacts", []);   // [{id, name}] 추가한 대화상대
-const saveContacts = () => lsSet("tt_contacts", contacts);
-let deferredInstall = null;                 // PWA 설치 프롬프트
 let unreadAnchor = 0;
 const saveBlocked = () => { lsSet("tt_blocked", [...blocked]); lsSet("tt_blocked_names", blockedNames); };
 const saveMuted = () => lsSet("tt_muted", [...muted]);
@@ -109,7 +104,7 @@ function readDataURL(e, limit, cb) {
 $("setup-start").onclick = () => {
   const nickname = $("setup-nickname").value.trim();
   if (!nickname) { $("setup-nickname").focus(); return; }
-  me = { id: shortCode(), nickname: nickname.slice(0, 20), avatar: pickedAvatar, status: $("setup-status").value.trim().slice(0, 60) };
+  me = { id: uid(), nickname: nickname.slice(0, 20), avatar: pickedAvatar, status: $("setup-status").value.trim().slice(0, 60) };
   startSession($("setup-code").value);
 };
 $("setup-nickname").addEventListener("keydown", (e) => { if (e.key === "Enter") $("setup-start").click(); });
@@ -119,8 +114,8 @@ async function startSession(code) {
   const res = await api("register", { nickname: me.nickname, avatar: me.avatar, status: me.status, code: code || "" });
   let ok = true, err = "";
   try { const j = await res.json(); ok = j.ok !== false; err = j.error || ""; } catch {}
-  if (!ok) { alert(err || "입장할 수 없습니다."); me = null; localStorage.removeItem("tt_me"); $("setup-code").classList.remove("hidden"); $("setup-code").focus(); return; }
-  localStorage.setItem("tt_me", JSON.stringify(me));
+  if (!ok) { alert(err || "입장할 수 없습니다."); me = null; sessionStorage.removeItem("tt_me"); $("setup-code").classList.remove("hidden"); $("setup-code").focus(); return; }
+  sessionStorage.setItem("tt_me", JSON.stringify(me));
   $("setup").classList.add("hidden"); $("app").classList.remove("hidden");
   renderMyProfile(); connectStream(); switchTab("friends");
   if ("Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {});
@@ -146,86 +141,22 @@ function switchTab(tab) {
   if (tab === "chats") renderChatList();
 }
 
-// ── 친구 목록 (추가한 대화상대 기반) ───────────────────────
-const liveUser = (id) => onlineList.find((u) => u.id === id);
+// ── 친구 목록 ───────────────────────────────────────────────
 function renderFriends() {
-  const mc = $("my-code"); if (mc && me) mc.textContent = me.id;
+  const others = onlineList.filter((u) => u.id !== me.id && !blocked.has(u.id));
+  $("friends-label").textContent = `친구 ${others.length}`;
   const list = $("friends-list"); list.innerHTML = "";
-
-  // 1) 내가 추가한 친구(대화상대)
-  const cs = contacts.filter((c) => !blocked.has(c.id));
-  $("friends-label").textContent = `친구 ${cs.length}`;
-  if (!cs.length) {
-    const li = document.createElement("li"); li.className = "empty-note";
-    li.innerHTML = "아직 추가한 친구가 없어요.<br/>위 <b>＋친구 추가</b>로 친구 코드를 입력하거나,<br/>아래 ‘지금 접속 중’에서 ＋추가 해보세요!";
-    list.appendChild(li);
-  }
-  for (const c of cs) {
-    const u = liveUser(c.id);
-    const online = !!u;
-    const name = online ? u.nickname : c.name;
-    const avatar = online ? u.avatar : "🙂";
+  if (!others.length) { list.innerHTML = `<li class="empty-note">아직 접속한 친구가 없어요.<br/>다른 PC/탭에서 같은 주소로 접속하면 친구로 나타납니다!</li>`; return; }
+  others.sort((a, b) => a.nickname.localeCompare(b.nickname));
+  for (const u of others) {
     const li = document.createElement("li");
     li.className = "friend-item";
-    li.innerHTML = `<div class="fi-avatar" style="${avatarStyle(avatar, c.id)}">${avatarInner(avatar)}${online ? '<span class="dot"></span>' : ""}</div>
-      <div class="fi-info"><span class="fi-name">${esc(name)}</span><span class="fi-status">${online ? esc(u.status || "온라인") : "오프라인"}</span></div>
-      <button class="fi-x" title="삭제">✕</button>`;
-    li.querySelector(".fi-x").onclick = (e) => { e.stopPropagation(); removeContact(c.id); };
-    li.onclick = () => api("openDM", { otherId: c.id });
+    li.innerHTML = `<div class="fi-avatar" style="${avatarStyle(u.avatar, u.id)}">${avatarInner(u.avatar)}<span class="dot"></span></div>
+      <div class="fi-info"><span class="fi-name">${esc(u.nickname)}</span><span class="fi-status">${esc(u.status || "")}</span></div>`;
+    li.onclick = () => api("openDM", { otherId: u.id });
     list.appendChild(li);
   }
-
-  // 2) 지금 접속 중인데 아직 친구가 아닌 사람 → 빠른 추가
-  const others = onlineList.filter((u) => u.id !== me.id && !blocked.has(u.id) && !contacts.some((c) => c.id === u.id));
-  if (others.length) {
-    const lab = document.createElement("li"); lab.className = "list-label inline-label"; lab.textContent = "지금 접속 중"; list.appendChild(lab);
-    for (const u of others) {
-      const li = document.createElement("li"); li.className = "friend-item";
-      li.innerHTML = `<div class="fi-avatar" style="${avatarStyle(u.avatar, u.id)}">${avatarInner(u.avatar)}<span class="dot"></span></div>
-        <div class="fi-info"><span class="fi-name">${esc(u.nickname)}</span><span class="fi-status">${esc(u.status || "")}</span></div>
-        <button class="fi-add">＋ 추가</button>`;
-      li.querySelector(".fi-add").onclick = (e) => { e.stopPropagation(); addContact(u.id, u.nickname); };
-      li.onclick = () => api("openDM", { otherId: u.id });
-      list.appendChild(li);
-    }
-  }
 }
-function addContact(id, name) {
-  id = String(id).trim();
-  if (!id || id === me.id) { alert("내 코드는 추가할 수 없어요."); return; }
-  if (contacts.some((c) => c.id === id)) { alert("이미 추가된 친구예요."); return; }
-  contacts.push({ id, name: (name || id).slice(0, 20) });
-  saveContacts();
-  if (currentTab === "friends") renderFriends();
-}
-function removeContact(id) {
-  if (!confirm("이 친구를 목록에서 삭제할까요?")) return;
-  contacts = contacts.filter((c) => c.id !== id);
-  saveContacts();
-  renderFriends();
-}
-
-// 내 코드 복사
-$("copy-code").onclick = () => {
-  navigator.clipboard?.writeText(me.id).then(() => { $("copy-code").textContent = "복사됨!"; setTimeout(() => ($("copy-code").textContent = "복사"), 1200); }).catch(() => {});
-};
-// 친구 추가 모달
-$("add-friend-btn").onclick = () => { $("addfriend-code").value = ""; $("addfriend-name").value = ""; $("addfriend-modal").classList.remove("hidden"); $("addfriend-code").focus(); };
-$("addfriend-cancel").onclick = () => $("addfriend-modal").classList.add("hidden");
-$("addfriend-ok").onclick = () => {
-  const code = $("addfriend-code").value.trim().toUpperCase();
-  const name = $("addfriend-name").value.trim();
-  $("addfriend-modal").classList.add("hidden");
-  if (code) addContact(code, name || code);
-};
-$("addfriend-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("addfriend-ok").click(); });
-
-// PWA 설치 (창처럼 띄우기)
-window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredInstall = e; });
-$("install-app").onclick = async () => {
-  if (deferredInstall) { deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; }
-  else { alert("브라우저 메뉴(⋮)의 ‘앱 설치’ / ‘이 사이트를 앱으로 설치’를 눌러주세요.\n(이미 설치됐거나, 일부 브라우저는 지원하지 않을 수 있어요)"); }
-};
 
 // ── 채팅방 목록 ─────────────────────────────────────────────
 function renderChatList() {
@@ -642,12 +573,12 @@ chatScreen.addEventListener("drop", (e) => { e.preventDefault(); for (const f of
 msgInput.addEventListener("paste", (e) => { for (const it of e.clipboardData.items) { if (it.type.startsWith("image/")) { const f = it.getAsFile(); if (f) { e.preventDefault(); sendFileObject(f); } } } });
 
 // ── 더보기 ──────────────────────────────────────────────────
-$("edit-profile").onclick = () => openModal("닉네임 변경", me.nickname, (name) => { if (name.trim()) { me.nickname = name.trim().slice(0, 20); localStorage.setItem("tt_me", JSON.stringify(me)); renderMyProfile(); api("updateProfile", { nickname: me.nickname }); } });
+$("edit-profile").onclick = () => openModal("닉네임 변경", me.nickname, (name) => { if (name.trim()) { me.nickname = name.trim().slice(0, 20); sessionStorage.setItem("tt_me", JSON.stringify(me)); renderMyProfile(); api("updateProfile", { nickname: me.nickname }); } });
 $("change-photo").onclick = () => avatarImg2.click();
 const avatarImg2 = document.createElement("input");
 avatarImg2.type = "file"; avatarImg2.accept = "image/*"; avatarImg2.hidden = true; document.body.appendChild(avatarImg2);
-avatarImg2.addEventListener("change", (e) => readDataURL(e, 1_500_000, (data) => { me.avatar = data; localStorage.setItem("tt_me", JSON.stringify(me)); renderMyProfile(); api("updateProfile", { avatar: data }); }));
-$("logout").onclick = () => { localStorage.removeItem("tt_me"); location.reload(); };
+avatarImg2.addEventListener("change", (e) => readDataURL(e, 1_500_000, (data) => { me.avatar = data; sessionStorage.setItem("tt_me", JSON.stringify(me)); renderMyProfile(); api("updateProfile", { avatar: data }); }));
+$("logout").onclick = () => { sessionStorage.removeItem("tt_me"); location.reload(); };
 
 // ── 모달 ────────────────────────────────────────────────────
 let modalCb = null;
@@ -774,5 +705,5 @@ if ("serviceWorker" in navigator) {
 buildAvatarPicker(); buildReactionRow();
 $("avatar-preview").innerHTML = avatarInner(pickedAvatar);
 fetch("/config").then((r) => r.json()).then((c) => { if (c.requireCode) $("setup-code").classList.remove("hidden"); }).catch(() => {});
-const saved = localStorage.getItem("tt_me");
-if (saved) { try { me = JSON.parse(saved); startSession(""); } catch { localStorage.removeItem("tt_me"); } }
+const saved = sessionStorage.getItem("tt_me");
+if (saved) { try { me = JSON.parse(saved); startSession(""); } catch { sessionStorage.removeItem("tt_me"); } }

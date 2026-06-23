@@ -316,18 +316,5 @@ html, body {
 /* 음소거 표시 */
 .cri-mute { font-size: 12px; opacity: 0.6; }
 
-/* 내 코드 + 친구 추가 */
-.code-row { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-.code-label { font-size: 12px; color: var(--sub); }
-.code-val { font-size: 15px; font-weight: 800; letter-spacing: 1px; color: var(--text); background: var(--surface-2); padding: 3px 10px; border-radius: 8px; }
-.code-copy { font-size: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
-.add-friend { margin-left: auto; font-size: 13px; font-weight: 700; background: var(--kakao-yellow); color: var(--kakao-brown); border: none; border-radius: 9px; padding: 7px 12px; cursor: pointer; }
-.inline-label { display: block; list-style: none; }
-.fi-add { margin-left: auto; font-size: 12px; font-weight: 700; background: var(--kakao-yellow); color: var(--kakao-brown); border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; flex-shrink: 0; }
-.fi-x { margin-left: auto; font-size: 13px; color: #c0c6cc; background: none; border: none; cursor: pointer; padding: 6px; flex-shrink: 0; }
-.fi-x:hover { color: #ff3b30; }
-.friend-item .fi-info { flex: 1; }
-.modal-desc { font-size: 12.5px; color: var(--sub); line-height: 1.5; margin-bottom: 12px; }
-
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 3px; }

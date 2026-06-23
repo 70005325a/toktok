@@ -54,12 +54,6 @@
             <span class="mp-status" id="mp-status"></span>
           </div>
         </div>
-        <div class="code-row">
-          <span class="code-label">내 코드</span>
-          <span class="code-val" id="my-code">------</span>
-          <button id="copy-code" class="code-copy">복사</button>
-          <button id="add-friend-btn" class="add-friend">＋ 친구 추가</button>
-        </div>
         <div class="list-label" id="friends-label">친구 0</div>
         <ul id="friends-list" class="friends-list"></ul>
       </div>
@@ -85,7 +79,6 @@
           <li id="edit-profile">✏️ 프로필 편집</li>
           <li id="change-photo">📷 프로필 사진 변경</li>
           <li id="open-blocklist">🚫 차단 목록 관리</li>
-          <li id="install-app">⬇️ 앱으로 설치 (창으로 띄우기)</li>
           <li class="toggle-row" id="dark-toggle">
             <span>🌙 다크모드</span>
             <span class="switch" id="dark-switch"><span class="knob"></span></span>
@@ -207,20 +200,6 @@
       <h3>전달할 채팅방 선택</h3>
       <ul id="forward-list" class="picker-list"></ul>
       <div class="modal-btns"><button id="forward-cancel" class="btn-ghost">취소</button></div>
-    </div>
-  </div>
-
-  <!-- 친구 추가 -->
-  <div id="addfriend-modal" class="modal hidden">
-    <div class="modal-card">
-      <h3>친구 추가</h3>
-      <p class="modal-desc">상대의 <b>코드</b>를 입력하면 친구로 추가돼요. (친구에게 내 코드를 알려주세요)</p>
-      <input id="addfriend-code" type="text" placeholder="친구 코드 (예: ABC123)" maxlength="40" autocomplete="off" />
-      <input id="addfriend-name" type="text" placeholder="이름/메모 (선택)" maxlength="20" autocomplete="off" />
-      <div class="modal-btns">
-        <button id="addfriend-cancel" class="btn-ghost">취소</button>
-        <button id="addfriend-ok" class="btn-primary">추가</button>
-      </div>
     </div>
   </div>
 

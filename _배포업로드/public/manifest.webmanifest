@@ -1,0 +1,15 @@
+{
+  "name": "톡톡 메신저",
+  "short_name": "톡톡",
+  "description": "카카오톡 스타일 실시간 웹 메신저",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fee500",
+  "theme_color": "#fee500",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
