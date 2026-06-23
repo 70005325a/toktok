@@ -1,4 +1,4 @@
-const CACHE = "toktok-v7";
+const CACHE = "toktok-v8";
 const ASSETS = ["./", "./index.html", "./style.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (e) => {

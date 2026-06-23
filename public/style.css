@@ -29,15 +29,19 @@
 html, body {
   height: 100%;
   font-family: "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
-  background: #2c3e50;
+  background: var(--surface);
   color: var(--text);
 }
 
+/* 창 크기에 꽉 차게 (단독 앱 창에 맞춤). 아주 넓은 화면에서만 가운데 정렬 */
 #phone {
   position: relative;
-  width: 100%; max-width: 440px; height: 100vh; margin: 0 auto;
+  width: 100%; max-width: 100%; height: 100vh; height: 100dvh; margin: 0 auto;
   background: var(--surface); overflow: hidden;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+}
+@media (min-width: 620px) {
+  body { background: #2c3e50; }
+  #phone { max-width: 440px; box-shadow: 0 0 40px rgba(0, 0, 0, 0.3); }
 }
 
 .screen { position: absolute; inset: 0; display: flex; flex-direction: column; }
