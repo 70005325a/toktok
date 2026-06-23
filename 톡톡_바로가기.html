@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>톡톡 메신저 바로가기</title>
+  <style>
+    html,body{height:100%;margin:0;font-family:"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+      background:linear-gradient(150deg,#fee500,#ffd400);display:flex;align-items:center;justify-content:center}
+    .card{background:#fff;width:320px;padding:34px 26px;border-radius:22px;text-align:center;
+      box-shadow:0 12px 40px rgba(0,0,0,.18)}
+    .logo{font-size:52px}
+    h1{font-size:23px;color:#3c1e1e;margin:6px 0 4px}
+    p{font-size:13px;color:#888;margin:6px 0 20px;line-height:1.5}
+    .btn{display:block;padding:15px;background:#fee500;color:#3c1e1e;font-weight:700;font-size:16px;
+      border-radius:12px;text-decoration:none;margin-bottom:10px}
+    .btn.alt{background:#f0f0f0;color:#555;font-size:14px;padding:12px}
+    .hint{font-size:11px;color:#b0b0b0;margin-top:14px}
+    input{width:100%;padding:11px 13px;border:1px solid #e3e3e3;border-radius:10px;font-size:13px;margin-bottom:10px;box-sizing:border-box}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">💬</div>
+    <h1>톡톡 메신저</h1>
+    <p>아래 버튼을 누르면 메신저가 열립니다.<br/>(서버가 켜져 있어야 해요)</p>
+    <a class="btn" href="http://localhost:4173">내 PC에서 열기 (localhost)</a>
+    <input id="addr" type="text" placeholder="외부 주소 붙여넣기 (https://....trycloudflare.com)" />
+    <a class="btn alt" id="goExt" href="#">붙여넣은 주소로 열기</a>
+    <p class="hint">💡 먼저 <b>톡톡_시작.bat</b>(외부) 또는 <b>톡톡_앱.bat</b>(내 PC)을 실행하세요.<br/>이 파일을 바탕화면에 두고 더블클릭하면 바로가기처럼 쓸 수 있어요.</p>
+  </div>
+  <script>
+    document.getElementById('goExt').addEventListener('click', function (e) {
+      e.preventDefault();
+      var v = document.getElementById('addr').value.trim();
+      if (!v) { alert('외부 주소를 붙여넣어 주세요.'); return; }
+      if (!/^https?:\/\//.test(v)) v = 'https://' + v;
+      location.href = v;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <title>톡톡 메신저</title>
+  <meta name="theme-color" content="#fee500" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="톡톡" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="phone">
+
+  <!-- ─────────── 프로필 설정 ─────────── -->
+  <section id="setup" class="screen setup-screen">
+    <div class="setup-card">
+      <div class="setup-logo">💬</div>
+      <h1>톡톡 메신저</h1>
+      <p class="setup-sub">프로필을 설정하고 시작하세요</p>
+
+      <div class="avatar-preview" id="avatar-preview">😀</div>
+      <button type="button" id="avatar-photo-btn" class="photo-btn">📷 사진 업로드</button>
+      <div class="emoji-row" id="avatar-emoji-row"></div>
+
+      <input id="setup-nickname" type="text" placeholder="닉네임 (필수)" maxlength="20" autocomplete="off" />
+      <input id="setup-status" type="text" placeholder="상태메시지 (선택)" maxlength="60" autocomplete="off" />
+      <input id="setup-code" type="password" placeholder="입장 코드" maxlength="40" autocomplete="off" class="hidden" />
+      <button id="setup-start">시작하기</button>
+      <p class="setup-tip">💡 새 탭에서 다시 열면 다른 사람으로 참여할 수 있어요.</p>
+    </div>
+    <input id="avatar-img-input" type="file" accept="image/*" hidden />
+  </section>
+
+  <!-- ─────────── 메인 ─────────── -->
+  <section id="app" class="screen hidden">
+    <header class="app-header">
+      <h2 id="app-title">친구</h2>
+      <div class="header-actions">
+        <button id="search-btn" class="icon-btn hidden" title="검색">🔍</button>
+        <button id="new-room-btn" class="icon-btn hidden" title="새 채팅방">✏️</button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <!-- 친구 탭 -->
+      <div id="tab-friends" class="tab-pane">
+        <div class="my-profile" id="my-profile">
+          <div class="mp-avatar" id="mp-avatar">😀</div>
+          <div class="mp-info">
+            <span class="mp-name" id="mp-name">나</span>
+            <span class="mp-status" id="mp-status"></span>
+          </div>
+        </div>
+        <div class="list-label" id="friends-label">친구 0</div>
+        <ul id="friends-list" class="friends-list"></ul>
+      </div>
+
+      <!-- 채팅 탭 -->
+      <div id="tab-chats" class="tab-pane hidden">
+        <div class="search-bar hidden" id="chat-search-bar">
+          <input id="chat-search" type="text" placeholder="채팅방·메시지 검색" autocomplete="off" />
+        </div>
+        <ul id="chat-list" class="chat-list"></ul>
+      </div>
+
+      <!-- 더보기 탭 -->
+      <div id="tab-more" class="tab-pane hidden">
+        <div class="my-profile big">
+          <div class="mp-avatar" id="mp-avatar2">😀</div>
+          <div class="mp-info">
+            <span class="mp-name" id="mp-name2">나</span>
+            <span class="mp-status" id="mp-status2"></span>
+          </div>
+        </div>
+        <ul class="settings-list">
+          <li id="edit-profile">✏️ 프로필 편집</li>
+          <li id="change-photo">📷 프로필 사진 변경</li>
+          <li id="open-blocklist">🚫 차단 목록 관리</li>
+          <li class="toggle-row" id="dark-toggle">
+            <span>🌙 다크모드</span>
+            <span class="switch" id="dark-switch"><span class="knob"></span></span>
+          </li>
+          <li id="logout">🚪 로그아웃</li>
+        </ul>
+        <p class="more-note">톡톡 메신저 · 설치 없이 동작하는 데모<br/>같은 브라우저의 여러 탭이 실시간으로 연결됩니다.</p>
+      </div>
+    </div>
+
+    <nav class="tabbar">
+      <button class="tab-btn active" data-tab="friends"><span class="ti">👥</span><span>친구</span></button>
+      <button class="tab-btn" data-tab="chats"><span class="ti">💬</span><span>채팅</span></button>
+      <button class="tab-btn" data-tab="more"><span class="ti">☰</span><span>더보기</span></button>
+    </nav>
+  </section>
+
+  <!-- ─────────── 채팅방 ─────────── -->
+  <section id="chatroom" class="screen chatroom-screen hidden">
+    <header class="chat-header">
+      <button id="chat-back" class="icon-btn">←</button>
+      <div class="ch-info">
+        <span id="chat-room-name" class="ch-name"></span>
+        <span id="chat-room-members" class="ch-members"></span>
+      </div>
+      <button id="room-search-btn" class="icon-btn" title="대화 검색">🔍</button>
+      <button id="room-menu-btn" class="icon-btn" title="메뉴">⋮</button>
+      <div id="room-menu" class="dropdown hidden">
+        <button data-act="rename">✏️ 채팅방 이름 변경</button>
+        <button data-act="members">👥 참여자 보기</button>
+        <button data-act="mute" id="menu-mute">🔔 알림 끄기</button>
+        <button data-act="bg">🎨 배경 변경</button>
+        <button data-act="delete" class="menu-danger">🗑️ 채팅방 삭제</button>
+      </div>
+    </header>
+
+    <div id="pinned-bar" class="pinned-bar hidden">
+      <span class="pin-ico">📌</span>
+      <span id="pinned-text" class="pin-text"></span>
+      <button id="pinned-unpin" class="icon-btn">✕</button>
+    </div>
+
+    <div class="search-bar room-search hidden" id="room-search-bar">
+      <input id="room-search-input" type="text" placeholder="이 대화방에서 검색" autocomplete="off" />
+      <button id="room-search-close" class="icon-btn">✕</button>
+    </div>
+
+    <div class="messages-wrap">
+      <ul id="messages" class="messages"></ul>
+      <button id="scroll-bottom" class="scroll-bottom hidden">⬇ 맨 아래로</button>
+    </div>
+    <div id="typing-indicator" class="typing-indicator"></div>
+
+    <div class="reply-banner hidden" id="reply-banner">
+      <div class="rb-body">
+        <span class="rb-name" id="rb-name"></span>
+        <span class="rb-text" id="rb-text"></span>
+      </div>
+      <button id="rb-cancel" class="icon-btn">✕</button>
+    </div>
+    <div class="reply-banner edit-banner hidden" id="edit-banner">
+      <div class="rb-body"><span class="rb-name">✏️ 메시지 수정 중</span><span class="rb-text" id="eb-text"></span></div>
+      <button id="eb-cancel" class="icon-btn">✕</button>
+    </div>
+
+    <div class="recording-bar hidden" id="recording-bar">
+      <span class="rec-dot"></span><span id="rec-time">0:00</span> 녹음 중...
+      <button type="button" id="rec-stop" class="btn-primary">전송</button>
+      <button type="button" id="rec-cancel" class="btn-ghost">취소</button>
+    </div>
+
+    <div class="emoji-picker hidden" id="emoji-picker"></div>
+
+    <form id="message-form" class="message-form">
+      <button type="button" id="img-btn" class="input-icon" title="사진">🖼️</button>
+      <button type="button" id="file-btn" class="input-icon" title="파일">📎</button>
+      <button type="button" id="voice-btn" class="input-icon" title="음성">🎤</button>
+      <button type="button" id="emoji-btn" class="input-icon" title="이모지">😊</button>
+      <textarea id="message-input" rows="1" placeholder="메시지 입력" autocomplete="off" maxlength="2000"></textarea>
+      <button type="submit" id="send-btn">전송</button>
+      <input id="img-input" type="file" accept="image/*" hidden />
+      <input id="file-input" type="file" hidden />
+    </form>
+  </section>
+
+  <!-- 반응 이모지 선택 -->
+  <div id="react-bar" class="react-bar hidden"></div>
+
+  <!-- 새 채팅방 모달 -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <h3 id="modal-title">새 채팅방</h3>
+      <input id="modal-input" type="text" placeholder="채팅방 이름" maxlength="30" />
+      <div class="modal-btns">
+        <button id="modal-cancel" class="btn-ghost">취소</button>
+        <button id="modal-ok" class="btn-primary">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메시지 액션 시트 -->
+  <div id="action-sheet" class="action-sheet hidden">
+    <div class="as-card">
+      <div class="as-reactions" id="as-reactions"></div>
+      <button data-act="reply">↩️ 답장</button>
+      <button data-act="forward">↪️ 전달</button>
+      <button data-act="copy">📋 복사</button>
+      <button data-act="pin" id="as-pin">📌 공지 고정</button>
+      <button data-act="edit" id="as-edit">✏️ 수정</button>
+      <button data-act="block" id="as-block">🚫 차단</button>
+      <button data-act="delete" id="as-delete">🗑️ 삭제</button>
+      <button data-act="cancel" class="as-cancel">취소</button>
+    </div>
+  </div>
+
+  <!-- 전달할 채팅방 선택 -->
+  <div id="forward-modal" class="modal hidden">
+    <div class="modal-card">
+      <h3>전달할 채팅방 선택</h3>
+      <ul id="forward-list" class="picker-list"></ul>
+      <div class="modal-btns"><button id="forward-cancel" class="btn-ghost">취소</button></div>
+    </div>
+  </div>
+
+  <!-- 차단 목록 관리 -->
+  <div id="block-modal" class="modal hidden">
+    <div class="modal-card">
+      <h3>차단 목록</h3>
+      <ul id="block-list" class="picker-list"></ul>
+      <div class="modal-btns"><button id="block-close" class="btn-ghost">닫기</button></div>
+    </div>
+  </div>
+
+  <!-- 배경 선택 -->
+  <div id="bg-modal" class="modal hidden">
+    <div class="modal-card">
+      <h3>채팅방 배경</h3>
+      <div id="bg-swatches" class="bg-swatches"></div>
+      <div class="modal-btns"><button id="bg-close" class="btn-ghost">닫기</button></div>
+    </div>
+  </div>
+
+  <!-- 이미지 뷰어 -->
+  <div id="image-viewer" class="image-viewer hidden"><img id="iv-img" src="" alt="" /></div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
