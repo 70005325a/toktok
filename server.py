@@ -223,7 +223,16 @@ def room_summaries_for(cid):
         name, avatar = room_display_name(room, cid)
         last_text = ""
         if last:
-            last_text = "삭제된 메시지" if last.get("deleted") else ("📷 사진" if last["kind"] == "image" else last["text"])
+            if last.get("deleted"):
+                last_text = "삭제된 메시지"
+            elif last["kind"] == "image":
+                last_text = "📷 사진"
+            elif last["kind"] == "file":
+                last_text = "📎 파일"
+            elif last["kind"] == "audio":
+                last_text = "🎤 음성 메시지"
+            else:
+                last_text = last["text"]  # 텍스트 또는 스티커(이모지)
         out.append({"id": room["id"], "name": name, "type": room["type"], "avatar": avatar,
                     "memberCount": room_member_online_count(room),
                     "lastText": last_text, "lastTs": last["ts"] if last else 0, "unread": unread})
@@ -354,7 +363,7 @@ def handle_action(data):
         if not room:
             return
         room["members"].add(cid)
-        kind = data.get("kind") if data.get("kind") in ("image", "file", "audio") else "text"
+        kind = data.get("kind") if data.get("kind") in ("image", "file", "audio", "sticker") else "text"
         text = data.get("text") or ""
         if kind in ("image", "file", "audio"):
             if not text.startswith("data:") or len(text) > 6_000_000:

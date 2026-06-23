@@ -106,13 +106,32 @@ function readDataURL(e, limit, cb) {
   e.target.value = "";
 }
 
-$("setup-start").onclick = () => {
+// 이름+비밀번호 → 항상 같은 ID 생성(같은 계정이면 대화·친구 복원)
+async function deriveId(name, pw) {
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const str = "toktok:" + name.trim().toLowerCase() + ":" + pw;
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+    const b = new Uint8Array(buf);
+    let s = ""; for (let i = 0; i < 8; i++) s += A[b[i] % A.length];
+    return s;
+  } catch {
+    let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    let s = ""; for (let i = 0; i < 8; i++) { s += A[h % A.length]; h = (Math.floor(h / A.length) + (i + 1) * 131) >>> 0; }
+    return s;
+  }
+}
+$("setup-start").onclick = async () => {
   const nickname = $("setup-nickname").value.trim();
+  const pw = $("setup-password").value;
   if (!nickname) { $("setup-nickname").focus(); return; }
-  me = { id: shortCode(), nickname: nickname.slice(0, 20), avatar: pickedAvatar, status: $("setup-status").value.trim().slice(0, 60) };
+  if (!pw) { alert("비밀번호를 입력하세요 (대화 저장·복원에 쓰여요)"); $("setup-password").focus(); return; }
+  const id = await deriveId(nickname, pw);
+  me = { id, nickname: nickname.slice(0, 20), avatar: pickedAvatar, status: $("setup-status").value.trim().slice(0, 60) };
   startSession($("setup-code").value);
 };
-$("setup-nickname").addEventListener("keydown", (e) => { if (e.key === "Enter") $("setup-start").click(); });
+$("setup-nickname").addEventListener("keydown", (e) => { if (e.key === "Enter") $("setup-password").focus(); });
+$("setup-password").addEventListener("keydown", (e) => { if (e.key === "Enter") $("setup-start").click(); });
 $("setup-code").addEventListener("keydown", (e) => { if (e.key === "Enter") $("setup-start").click(); });
 
 async function startSession(code) {
@@ -363,6 +382,7 @@ function renderRoom(force) {
     else if (m.kind === "image") body = `<div class="bubble" data-mid="${m.id}"><img src="${m.text}" alt="사진"/></div>`;
     else if (m.kind === "audio") body = `<div class="bubble" data-mid="${m.id}"><audio controls src="${m.text}"></audio></div>`;
     else if (m.kind === "file") body = `<div class="bubble" data-mid="${m.id}"><a href="${m.text}" download="${esc(m.fileName || "file")}" class="file-card"><span class="fc-icon">📄</span><span class="fc-info"><span class="fc-name">${esc(m.fileName || "파일")}</span><span class="fc-dl">탭하여 저장</span></span></a></div>`;
+    else if (m.kind === "sticker") body = `<div class="bubble sticker" data-mid="${m.id}">${esc(m.text)}</div>`;
     else body = `<div class="bubble" data-mid="${m.id}">${renderText(m.text, q)}${m.edited ? '<span class="edited-tag">(수정됨)</span>' : ""}</div>`;
 
     const quote = m.replyTo ? `<div class="reply-quote" data-jump="${m.replyTo.id || ""}"><b>${esc(m.replyTo.nickname)}</b><span>${esc(m.replyTo.kind === "image" ? "📷 사진" : m.replyTo.kind === "file" ? "📄 파일" : m.replyTo.kind === "audio" ? "🎤 음성" : m.replyTo.text)}</span></div>` : "";
@@ -435,7 +455,7 @@ $("message-form").addEventListener("submit", (e) => {
 function sendMessage(text, kind, extra = {}) {
   const payload = { roomId: openRoomId, text, kind, ...extra };
   if (replyTarget) { payload.replyTo = { id: replyTarget.id, nickname: replyTarget.nickname, text: (replyTarget.text || "").slice(0, 60), kind: replyTarget.kind }; clearReply(); }
-  $("emoji-picker").classList.add("hidden");
+  $("emoji-picker").classList.add("hidden"); $("sticker-panel").classList.add("hidden");
   api("message", payload);
 }
 // 여러 줄 입력: Enter 전송, Shift+Enter 줄바꿈
@@ -592,7 +612,13 @@ $("bg-close").onclick = () => $("bg-modal").classList.add("hidden");
 // ── 이모지 / 이미지 / 파일 ──────────────────────────────────
 const picker = $("emoji-picker");
 PICKER_EMOJIS.forEach((emo) => { const b = document.createElement("button"); b.textContent = emo; b.type = "button"; b.onclick = () => { msgInput.value += emo; autoGrow(); msgInput.focus(); }; picker.appendChild(b); });
-$("emoji-btn").onclick = () => picker.classList.toggle("hidden");
+$("emoji-btn").onclick = () => { $("sticker-panel").classList.add("hidden"); picker.classList.toggle("hidden"); };
+
+// 귀여운 스티커 (클릭 시 바로 전송)
+const STICKERS = ["🥰","😻","🐰","🐶","🐱","🐻","🐼","🦄","🐥","🐧","🌸","🎉","💛","💕","✨","😂","😭","🥳","👍","🙏","😎","🤗","😴","🍀","🌈","🔥","💯","🤩","🙆","🙅"];
+const stickerPanel = $("sticker-panel");
+STICKERS.forEach((s) => { const b = document.createElement("button"); b.textContent = s; b.type = "button"; b.onclick = () => { if (openRoomId) { sendMessage(s, "sticker"); stickerPanel.classList.add("hidden"); } }; stickerPanel.appendChild(b); });
+$("sticker-btn").onclick = () => { picker.classList.add("hidden"); stickerPanel.classList.toggle("hidden"); };
 $("img-btn").onclick = () => $("img-input").click();
 $("img-input").addEventListener("change", (e) => readDataURL(e, 2_000_000, (data) => sendMessage(data, "image")));
 $("file-btn").onclick = () => $("file-input").click();

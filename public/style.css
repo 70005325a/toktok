@@ -316,6 +316,12 @@ html, body {
 /* 음소거 표시 */
 .cri-mute { font-size: 12px; opacity: 0.6; }
 
+/* 스티커 */
+.bubble.sticker { background: transparent !important; box-shadow: none !important; padding: 0 !important; font-size: 60px; line-height: 1; border-radius: 0 !important; }
+.sticker-panel { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; background: var(--surface); border-top: 1px solid var(--line); max-height: 180px; overflow-y: auto; justify-content: center; }
+.sticker-panel button { width: 56px; height: 56px; border: none; background: var(--surface-2); font-size: 32px; cursor: pointer; border-radius: 14px; }
+.sticker-panel button:hover { background: var(--kakao-yellow); }
+
 /* 내 코드 + 친구 추가 */
 .code-row { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .code-label { font-size: 12px; color: var(--sub); }

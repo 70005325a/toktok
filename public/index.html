@@ -19,17 +19,18 @@
     <div class="setup-card">
       <div class="setup-logo">💬</div>
       <h1>톡톡 메신저</h1>
-      <p class="setup-sub">프로필을 설정하고 시작하세요</p>
+      <p class="setup-sub">이름과 비밀번호로 로그인하세요</p>
 
       <div class="avatar-preview" id="avatar-preview">😀</div>
       <button type="button" id="avatar-photo-btn" class="photo-btn">📷 사진 업로드</button>
       <div class="emoji-row" id="avatar-emoji-row"></div>
 
-      <input id="setup-nickname" type="text" placeholder="닉네임 (필수)" maxlength="20" autocomplete="off" />
+      <input id="setup-nickname" type="text" placeholder="이름 (로그인 아이디)" maxlength="20" autocomplete="off" />
+      <input id="setup-password" type="password" placeholder="비밀번호 (대화 저장·복원용)" maxlength="40" autocomplete="off" />
       <input id="setup-status" type="text" placeholder="상태메시지 (선택)" maxlength="60" autocomplete="off" />
-      <input id="setup-code" type="password" placeholder="입장 코드" maxlength="40" autocomplete="off" class="hidden" />
-      <button id="setup-start">시작하기</button>
-      <p class="setup-tip">💡 새 탭에서 다시 열면 다른 사람으로 참여할 수 있어요.</p>
+      <input id="setup-code" type="password" placeholder="입장 코드 (서버 비번)" maxlength="40" autocomplete="off" class="hidden" />
+      <button id="setup-start">로그인 / 시작</button>
+      <p class="setup-tip">💡 같은 <b>이름+비밀번호</b>로 다시 들어오면 대화·친구가 그대로 복원돼요.</p>
     </div>
     <input id="avatar-img-input" type="file" accept="image/*" hidden />
   </section>
@@ -118,7 +119,7 @@
         <button data-act="members">👥 참여자 보기</button>
         <button data-act="mute" id="menu-mute">🔔 알림 끄기</button>
         <button data-act="bg">🎨 배경 변경</button>
-        <button data-act="delete" class="menu-danger">🗑️ 채팅방 삭제</button>
+        <button data-act="delete" class="menu-danger">🚪 나가기 (방 폭파)</button>
       </div>
     </header>
 
@@ -158,11 +159,13 @@
     </div>
 
     <div class="emoji-picker hidden" id="emoji-picker"></div>
+    <div class="sticker-panel hidden" id="sticker-panel"></div>
 
     <form id="message-form" class="message-form">
       <button type="button" id="img-btn" class="input-icon" title="사진">🖼️</button>
       <button type="button" id="file-btn" class="input-icon" title="파일">📎</button>
       <button type="button" id="voice-btn" class="input-icon" title="음성">🎤</button>
+      <button type="button" id="sticker-btn" class="input-icon" title="스티커">🧸</button>
       <button type="button" id="emoji-btn" class="input-icon" title="이모지">😊</button>
       <textarea id="message-input" rows="1" placeholder="메시지 입력" autocomplete="off" maxlength="2000"></textarea>
       <button type="submit" id="send-btn">전송</button>
