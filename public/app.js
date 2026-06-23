@@ -453,10 +453,20 @@ $("message-form").addEventListener("submit", (e) => {
   input.value = ""; autoGrow(); input.focus();
 });
 function sendMessage(text, kind, extra = {}) {
-  const payload = { roomId: openRoomId, text, kind, ...extra };
-  if (replyTarget) { payload.replyTo = { id: replyTarget.id, nickname: replyTarget.nickname, text: (replyTarget.text || "").slice(0, 60), kind: replyTarget.kind }; clearReply(); }
+  let replyTo = null;
+  if (replyTarget) { replyTo = { id: replyTarget.id, nickname: replyTarget.nickname, text: (replyTarget.text || "").slice(0, 60), kind: replyTarget.kind }; clearReply(); }
   $("emoji-picker").classList.add("hidden"); $("sticker-panel").classList.add("hidden");
-  api("message", payload);
+  // 낙관적 표시: 보내는 즉시 내 화면에 먼저 띄움(서버 응답 오면 교체)
+  const c = roomCache[openRoomId];
+  if (c) {
+    const temp = { id: "tmp_" + uid(), senderId: me.id, nickname: me.nickname, avatar: me.avatar, text, kind, ts: Date.now(), pending: true };
+    if (replyTo) temp.replyTo = replyTo;
+    if (extra.fileName) temp.fileName = extra.fileName;
+    if (extra.duration) temp.duration = extra.duration;
+    c.messages.push(temp);
+    if (openRoomId) renderRoom(true);
+  }
+  api("message", { roomId: openRoomId, text, kind, ...extra, ...(replyTo ? { replyTo } : {}) });
 }
 // 여러 줄 입력: Enter 전송, Shift+Enter 줄바꿈
 const msgInput = $("message-input");
@@ -728,8 +738,15 @@ function handleEvent(d) {
     case "message":
       if (d.message) {
         const c = roomCache[d.roomId];
-        if (c) { c.messages.push(d.message); if (c.messages.length > 400) c.messages.shift(); }
         const mine = d.message.senderId === me.id;
+        if (c) {
+          // 내가 보낸 낙관적 임시 메시지가 있으면 실제 메시지로 교체(중복 방지)
+          let idx = -1;
+          if (mine) idx = c.messages.findIndex((m) => m.pending && m.kind === d.message.kind && m.text === d.message.text);
+          if (idx >= 0) c.messages[idx] = d.message;
+          else c.messages.push(d.message);
+          if (c.messages.length > 400) c.messages.shift();
+        }
         const mentioned = me && d.message.kind === "text" && d.message.text && d.message.text.includes("@" + me.nickname);
         if (openRoomId === d.roomId) {
           const wasBottom = isAtBottom();
